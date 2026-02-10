@@ -19,3 +19,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Environment variables and secrets
+.env
+.env.local
+*.key
+secrets/
