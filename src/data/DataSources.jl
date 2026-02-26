@@ -13,7 +13,9 @@ module DataSources
 using Dates
 using DataFrames
 
-export DataSource, DataSourceError, FredSource, WorldBankSource, IMFSource, AlphaVantageSource, BankOfEnglandSource
+export DataSource, DataSourceError
+export FredSource, WorldBankSource, IMFSource, AlphaVantageSource, BankOfEnglandSource
+export YFinanceSource, BlsSource, ECBSource, EurostatSource
 export fetch_data, fetch_time_series, list_available_series
 export get_metadata, validate_connection, supports_asset_type
 
@@ -183,5 +185,9 @@ include("WorldBankSource.jl")
 include("IMFSource.jl")
 include("AlphaVantageSource.jl")
 include("BankOfEnglandSource.jl")
+include("YFinanceSource.jl")
+include("BlsSource.jl")
+include("ECBSource.jl")
+include("EurostatSource.jl")
 
 end # module DataSources
