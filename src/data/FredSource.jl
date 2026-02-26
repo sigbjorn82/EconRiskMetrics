@@ -8,6 +8,8 @@ Wraps the FredData.jl package to match the DataSource interface.
 using FredData
 using Dates
 using DataFrames
+using HTTP
+using JSON3
 
 """
     FredSource <: DataSource
@@ -68,6 +70,42 @@ function FredSource(api_key::Union{AbstractString,Nothing}=nothing)
 end
 
 """
+    _fetch_observations_direct(source::FredSource, identifier::String; kwargs...) -> DataFrame
+
+Direct HTTP fallback for fetching FRED observations.
+Some series (e.g., SP500) exist in FRED but not ALFRED, causing FredData.jl's
+metadata query to fail. This function fetches only observations, bypassing metadata.
+"""
+function _fetch_observations_direct(source::FredSource, identifier::String; kwargs...)
+    base_url = "https://api.stlouisfed.org/fred/series/observations"
+    params = Dict{String,String}(
+        "api_key"   => source.api_key,
+        "file_type" => "json",
+        "series_id" => identifier
+    )
+    for (key, value) in kwargs
+        params[string(key)] = string(value)
+    end
+
+    response = HTTP.request("GET", base_url, []; query=params)
+    json = JSON3.read(String(copy(response.body)))
+
+    n = length(json.observations)
+    dates  = Vector{Date}(undef, n)
+    values = Vector{Float64}(undef, n)
+    for (i, obs) in enumerate(json.observations)
+        dates[i] = Date(String(obs.date), "yyyy-mm-dd")
+        values[i] = try
+            parse(Float64, String(obs.value))
+        catch
+            NaN
+        end
+    end
+
+    return DataFrame(date=dates, value=values)
+end
+
+"""
     fetch_data(source::FredSource, identifier::String; kwargs...) -> DataFrame
 
 Fetch data from FRED for the given series identifier.
@@ -100,6 +138,16 @@ function fetch_data(source::FredSource, identifier::String; kwargs...)
 
         return df
     catch e
+        # Some series (e.g., SP500) exist in FRED but not ALFRED.
+        # FredData.jl's metadata query fails for these. Fall back to direct HTTP.
+        if e isa HTTP.Exceptions.StatusError && e.status == 400
+            @info "FredData metadata failed for '$identifier', using direct HTTP fallback"
+            try
+                return _fetch_observations_direct(source, identifier; kwargs...)
+            catch e2
+                throw(DataSourceError("FredSource", "Failed to fetch '$identifier': $(e2)"))
+            end
+        end
         throw(DataSourceError("FredSource", "Failed to fetch '$identifier': $(e)"))
     end
 end
@@ -147,16 +195,20 @@ function fetch_time_series(source::FredSource, identifier::String;
         # Merge with additional kwargs
         params = merge(params, Dict(kwargs))
 
-        # Fetch data
-        data = FredData.get_data(source.fred, identifier; params...)
+        # Try FredData first, fall back to direct HTTP for ALFRED-incompatible series
+        df = try
+            data = FredData.get_data(source.fred, identifier; params...)
+            DataFrame(date = data.data[:, :date], value = data.data[:, :value])
+        catch e
+            if e isa HTTP.Exceptions.StatusError && e.status == 400
+                @info "FredData metadata failed for '$identifier', using direct HTTP fallback"
+                _fetch_observations_direct(source, identifier; params...)
+            else
+                rethrow(e)
+            end
+        end
 
-        # Convert to standardized DataFrame format
-        df = DataFrame(
-            date = data.data[:, :date],
-            value = data.data[:, :value]
-        )
-
-        # Filter by date range if needed (FredData should handle this, but double-check)
+        # Filter by date range
         if start_date !== nothing
             df = df[df.date .>= start_date, :]
         end
