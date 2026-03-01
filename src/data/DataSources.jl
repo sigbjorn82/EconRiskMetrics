@@ -15,7 +15,7 @@ using DataFrames
 
 export DataSource, DataSourceError
 export FredSource, WorldBankSource, IMFSource, AlphaVantageSource, BankOfEnglandSource
-export YFinanceSource, BlsSource, ECBSource, EurostatSource
+export YFinanceSource, BlsSource, ECBSource, EurostatSource, OECDSource, BojSource
 export fetch_data, fetch_time_series, list_available_series
 export get_metadata, validate_connection, supports_asset_type
 
@@ -189,5 +189,7 @@ include("YFinanceSource.jl")
 include("BlsSource.jl")
 include("ECBSource.jl")
 include("EurostatSource.jl")
+include("OECDSource.jl")
+include("BojSource.jl")
 
 end # module DataSources
