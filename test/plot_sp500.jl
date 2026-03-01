@@ -1,5 +1,5 @@
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 
 using EconRiskMetrics
 using DataFrames
@@ -7,7 +7,7 @@ using Dates
 using Plots
 
 # Load API key from .env
-load_env(joinpath(@__DIR__, ".env"))
+load_env(joinpath(@__DIR__, "..", ".env"))
 
 # Create FRED connection
 fred = FredSource()
@@ -41,5 +41,5 @@ plot(sp500_clean.date, sp500_clean.value,
     margin = 5Plots.mm)
 
 # Save
-savefig(joinpath(@__DIR__, "sp500_plot.png"))
-println("\nPlot saved to sp500_plot.png")
+savefig(joinpath(@__DIR__, "plots", "sp500_plot.png"))
+println("\nPlot saved to test/plots/sp500_plot.png")

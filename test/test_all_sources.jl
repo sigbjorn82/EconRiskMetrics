@@ -4,12 +4,12 @@ test_all_sources.jl
 Comprehensive verification script for all EconRiskMetrics data sources.
 Fetches representative series from each source, prints stats, and saves plots.
 
-Run from project root:
-    julia --project=. test_all_sources.jl
+Run from test/ directory:
+    julia --project=.. test_all_sources.jl
 """
 
 using Pkg
-Pkg.activate(@__DIR__)
+Pkg.activate(joinpath(@__DIR__, ".."))
 
 using EconRiskMetrics
 using DataFrames
@@ -30,7 +30,9 @@ function load_dotenv(path::String)
     end
 end
 
-load_dotenv(joinpath(@__DIR__, ".env"))
+load_dotenv(joinpath(@__DIR__, "..", ".env"))
+
+const PLOTS_DIR = joinpath(@__DIR__, "plots")
 
 """Print a summary table row for a fetched DataFrame."""
 function print_stats(name::String, df::DataFrame)
@@ -72,8 +74,8 @@ try
         layout=4, title=["Real GDP" "Unemployment" "S&P 500" "Fed Funds"],
         size=(1000, 600), left_margin=5Plots.mm, bottom_margin=5Plots.mm,
         titlefontsize=9, legendfontsize=7)
-    savefig(fred_plot, joinpath(@__DIR__, "plot_fred.png"))
-    println("  → Saved plot_fred.png")
+    savefig(fred_plot, joinpath(PLOTS_DIR, "plot_fred.png"))
+    println("  → Saved plots/plot_fred.png")
     results["FRED"] = gdp
 catch e
     println("  ✗ FRED error: $e")
@@ -106,8 +108,8 @@ try
         layout=4, title=["Apple" "S&P 500 ETF" "VIX" "Bitcoin"],
         size=(1000, 600), left_margin=5Plots.mm, bottom_margin=5Plots.mm,
         titlefontsize=9, legendfontsize=7)
-    savefig(yf_plot, joinpath(@__DIR__, "plot_yfinance.png"))
-    println("  → Saved plot_yfinance.png")
+    savefig(yf_plot, joinpath(PLOTS_DIR, "plot_yfinance.png"))
+    println("  → Saved plots/plot_yfinance.png")
     results["YFinance"] = aapl
 catch e
     println("  ✗ YFinance error: $e")
@@ -134,8 +136,8 @@ try
         layout=2, title=["Microsoft (MSFT)" "IBM"],
         size=(900, 350), left_margin=5Plots.mm, bottom_margin=5Plots.mm,
         titlefontsize=9, legendfontsize=7)
-    savefig(av_plot, joinpath(@__DIR__, "plot_alphavantage.png"))
-    println("  → Saved plot_alphavantage.png")
+    savefig(av_plot, joinpath(PLOTS_DIR, "plot_alphavantage.png"))
+    println("  → Saved plots/plot_alphavantage.png")
     results["AlphaVantage"] = msft
 catch e
     println("  ✗ Alpha Vantage error: $e")
@@ -165,8 +167,8 @@ try
         layout=3, title=["US Population" "US GDP per Capita" "Germany GDP"],
         size=(1000, 350), left_margin=5Plots.mm, bottom_margin=5Plots.mm,
         titlefontsize=9, legendfontsize=7)
-    savefig(wb_plot, joinpath(@__DIR__, "plot_worldbank.png"))
-    println("  → Saved plot_worldbank.png")
+    savefig(wb_plot, joinpath(PLOTS_DIR, "plot_worldbank.png"))
+    println("  → Saved plots/plot_worldbank.png")
     results["WorldBank"] = pop
 catch e
     println("  ✗ World Bank error: $e")
@@ -193,8 +195,8 @@ try
         layout=2, title=["US CPI (IMF IFS)" "UK Real GDP (IMF IFS)"],
         size=(900, 350), left_margin=5Plots.mm, bottom_margin=5Plots.mm,
         titlefontsize=9, legendfontsize=7)
-    savefig(imf_plot, joinpath(@__DIR__, "plot_imf.png"))
-    println("  → Saved plot_imf.png")
+    savefig(imf_plot, joinpath(PLOTS_DIR, "plot_imf.png"))
+    println("  → Saved plots/plot_imf.png")
     results["IMF"] = cpi
 catch e
     println("  ✗ IMF error (server may be temporarily down): $e")
@@ -220,8 +222,8 @@ try
         layout=2, title=["BoE Bank Rate" "GBP/USD Spot"],
         size=(900, 350), left_margin=5Plots.mm, bottom_margin=5Plots.mm,
         titlefontsize=9, legendfontsize=7)
-    savefig(boe_plot, joinpath(@__DIR__, "plot_boe.png"))
-    println("  → Saved plot_boe.png")
+    savefig(boe_plot, joinpath(PLOTS_DIR, "plot_boe.png"))
+    println("  → Saved plots/plot_boe.png")
     results["BoE"] = bank_rate
 catch e
     println("  ✗ Bank of England error: $e")
@@ -250,8 +252,8 @@ try
         layout=3, title=["EUR/USD" "EUR/GBP" "Euro Area HICP"],
         size=(1000, 350), left_margin=5Plots.mm, bottom_margin=5Plots.mm,
         titlefontsize=9, legendfontsize=7)
-    savefig(ecb_plot, joinpath(@__DIR__, "plot_ecb.png"))
-    println("  → Saved plot_ecb.png")
+    savefig(ecb_plot, joinpath(PLOTS_DIR, "plot_ecb.png"))
+    println("  → Saved plots/plot_ecb.png")
     results["ECB"] = eurusd
 catch e
     println("  ✗ ECB error: $e")
@@ -263,11 +265,11 @@ println("\n═══════════════════════
 println(" 8. BLS (Bureau of Labor Statistics)")
 println("══════════════════════════════════")
 try
-    # BLS free tier: 10-year window max without API key
+    # With API key: up to 500 req/day and 20-year window
     bls   = BlsSource()
-    unemp   = fetch_time_series(bls, "LNS14000000",   start_date=Date(2015,1,1))
-    cpi     = fetch_time_series(bls, "CUUR0000SA0",   start_date=Date(2015,1,1))
-    payroll = fetch_time_series(bls, "CES0000000001", start_date=Date(2015,1,1))
+    unemp   = fetch_time_series(bls, "LNS14000000",   start_date=Date(2000,1,1))
+    cpi     = fetch_time_series(bls, "CUUR0000SA0",   start_date=Date(2000,1,1))
+    payroll = fetch_time_series(bls, "CES0000000001", start_date=Date(2000,1,1))
 
     print_stats("Unemployment Rate % (LNS14000000)",       unemp)
     print_stats("CPI-U All Items SA (CUUR0000SA0)",        cpi)
@@ -281,8 +283,8 @@ try
         layout=3, title=["Unemployment Rate" "CPI-U (SA)" "Nonfarm Payrolls"],
         size=(1000, 350), left_margin=5Plots.mm, bottom_margin=5Plots.mm,
         titlefontsize=9, legendfontsize=7)
-    savefig(bls_plot, joinpath(@__DIR__, "plot_bls.png"))
-    println("  → Saved plot_bls.png")
+    savefig(bls_plot, joinpath(PLOTS_DIR, "plot_bls.png"))
+    println("  → Saved plots/plot_bls.png")
     results["BLS"] = unemp
 catch e
     println("  ✗ BLS error: $e")
@@ -314,8 +316,8 @@ try
         layout=3, title=["EU27 HICP" "EU27 Unemployment" "Germany GDP"],
         size=(1000, 350), left_margin=5Plots.mm, bottom_margin=5Plots.mm,
         titlefontsize=9, legendfontsize=7)
-    savefig(es_plot, joinpath(@__DIR__, "plot_eurostat.png"))
-    println("  → Saved plot_eurostat.png")
+    savefig(es_plot, joinpath(PLOTS_DIR, "plot_eurostat.png"))
+    println("  → Saved plots/plot_eurostat.png")
     results["Eurostat"] = hicp
 catch e
     println("  ✗ Eurostat error: $e")

@@ -2,17 +2,17 @@
 
 """
 Test script for FredSource implementation
-Run with: julia --project=. test_fred.jl
+Run with: julia --project=.. test_fred.jl
 """
 
 using Pkg
-Pkg.activate(".")
+Pkg.activate(joinpath(@__DIR__, ".."))
 
 # Load the EconRiskMetrics package
 using EconRiskMetrics
 
 # Load environment variables from .env file
-load_env(joinpath(@__DIR__, ".env"))
+load_env(joinpath(@__DIR__, "..", ".env"))
 using DataFrames
 using Dates
 
