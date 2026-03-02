@@ -16,8 +16,12 @@ using DataFrames
 export DataSource, DataSourceError
 export FredSource, WorldBankSource, IMFSource, AlphaVantageSource, BankOfEnglandSource
 export YFinanceSource, BlsSource, ECBSource, EurostatSource, OECDSource, BojSource
+export EcosSource, MasSource, AdbSource
+export StatCanSource, OnsSource, SnbSource, NorgesSource, EiaSource, RiksbanksSource
+export SsbSource
 export fetch_data, fetch_time_series, list_available_series
 export get_metadata, validate_connection, supports_asset_type
+export search_indicators
 
 """
     DataSource
@@ -191,5 +195,15 @@ include("ECBSource.jl")
 include("EurostatSource.jl")
 include("OECDSource.jl")
 include("BojSource.jl")
+include("EcosSource.jl")
+include("MasSource.jl")
+include("AdbSource.jl")
+include("StatCanSource.jl")
+include("OnsSource.jl")
+include("SnbSource.jl")
+include("NorgesSource.jl")
+include("EiaSource.jl")
+include("RiksbanksSource.jl")
+include("SsbSource.jl")
 
 end # module DataSources
